@@ -564,7 +564,7 @@ static void              _JKDictionaryAddObject(JKDictionary *dictionary, NSUInt
 static JKHashTableEntry *_JKDictionaryHashTableEntryForKey(JKDictionary *dictionary, id aKey);
 
 
-static void _JSONDecoderCleanup(JSONDecoder *decoder);
+static void _JSONDecoderCleanup(JSONKitDecoder *decoder);
 
 static id _NSStringObjectFromJSONString(NSString *jsonString, JKParseOptionFlags parseOptionFlags, NSError **error, BOOL mutableCollection);
 
@@ -2075,7 +2075,7 @@ static void *jk_object_for_token(JKParseState *parseState) {
 }
 
 #pragma mark -
-@implementation JSONDecoder
+@implementation JSONKitDecoder
 
 + (id)decoder
 {
@@ -2121,7 +2121,7 @@ static void *jk_object_for_token(JKParseState *parseState) {
 }
 
 // This is here primarily to support the NSString and NSData convenience functions so the autoreleased JSONDecoder can release most of its resources before the pool pops.
-static void _JSONDecoderCleanup(JSONDecoder *decoder) {
+static void _JSONDecoderCleanup(JSONKitDecoder *decoder) {
   if((decoder != NULL) && (decoder->parseState != NULL)) {
     jk_managedBuffer_release(&decoder->parseState->token.tokenBuffer);
     jk_objectStack_release(&decoder->parseState->objectStack);
@@ -2325,7 +2325,7 @@ static id _JKParseUTF8String(JKParseState *parseState, BOOL mutableCollections, 
 static id _NSStringObjectFromJSONString(NSString *jsonString, JKParseOptionFlags parseOptionFlags, NSError **error, BOOL mutableCollection) {
   id                returnObject = NULL;
   CFMutableDataRef  mutableData  = NULL;
-  JSONDecoder      *decoder      = NULL;
+  JSONKitDecoder      *decoder      = NULL;
   
   CFIndex    stringLength     = CFStringGetLength((CFStringRef)jsonString);
   NSUInteger stringUTF8Length = [jsonString lengthOfBytesUsingEncoding:NSUTF8StringEncoding];
@@ -2337,8 +2337,8 @@ static id _NSStringObjectFromJSONString(NSString *jsonString, JKParseOptionFlags
     convertedCount = CFStringGetBytes((CFStringRef)jsonString, CFRangeMake(0L, stringLength), kCFStringEncodingUTF8, '?', NO, utf8String, (NSUInteger)stringUTF8Length, &usedBytes);
     if(JK_EXPECT_F(convertedCount != stringLength) || JK_EXPECT_F(usedBytes < 0L)) { if(error != NULL) { *error = [NSError errorWithDomain:@"JKErrorDomain" code:-1L userInfo:[NSDictionary dictionaryWithObject:@"An error occurred converting the contents of a NSString to UTF8." forKey:NSLocalizedDescriptionKey]]; } goto exitNow; }
     
-    if(mutableCollection == NO) { returnObject = [(decoder = [JSONDecoder decoderWithParseOptions:parseOptionFlags])        objectWithUTF8String:(const unsigned char *)utf8String length:(size_t)usedBytes error:error]; }
-    else                        { returnObject = [(decoder = [JSONDecoder decoderWithParseOptions:parseOptionFlags]) mutableObjectWithUTF8String:(const unsigned char *)utf8String length:(size_t)usedBytes error:error]; }
+    if(mutableCollection == NO) { returnObject = [(decoder = [JSONKitDecoder decoderWithParseOptions:parseOptionFlags])        objectWithUTF8String:(const unsigned char *)utf8String length:(size_t)usedBytes error:error]; }
+    else                        { returnObject = [(decoder = [JSONKitDecoder decoderWithParseOptions:parseOptionFlags]) mutableObjectWithUTF8String:(const unsigned char *)utf8String length:(size_t)usedBytes error:error]; }
   }
   
 exitNow:
@@ -2394,8 +2394,8 @@ exitNow:
 
 - (id)objectFromJSONDataWithParseOptions:(JKParseOptionFlags)parseOptionFlags error:(NSError **)error
 {
-  JSONDecoder *decoder = NULL;
-  id returnObject = [(decoder = [JSONDecoder decoderWithParseOptions:parseOptionFlags]) objectWithData:self error:error];
+  JSONKitDecoder *decoder = NULL;
+  id returnObject = [(decoder = [JSONKitDecoder decoderWithParseOptions:parseOptionFlags]) objectWithData:self error:error];
   if(decoder != NULL) { _JSONDecoderCleanup(decoder); }
   return(returnObject);
 }
@@ -2412,8 +2412,8 @@ exitNow:
 
 - (id)mutableObjectFromJSONDataWithParseOptions:(JKParseOptionFlags)parseOptionFlags error:(NSError **)error
 {
-  JSONDecoder *decoder = NULL;
-  id returnObject = [(decoder = [JSONDecoder decoderWithParseOptions:parseOptionFlags]) mutableObjectWithData:self error:error];
+  JSONKitDecoder *decoder = NULL;
+  id returnObject = [(decoder = [JSONKitDecoder decoderWithParseOptions:parseOptionFlags]) mutableObjectWithData:self error:error];
   if(decoder != NULL) { _JSONDecoderCleanup(decoder); }
   return(returnObject);
 }
